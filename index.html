@@ -40,14 +40,15 @@
 
   /* ── TOP-RIGHT METADATA ───────────────────────────── */
   .metadata {
-    position: fixed;
+    position: absolute;
     top: 28px;
     right: 32px;
-    z-index: 100;
     text-align: right;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    pointer-events: none;
+    user-select: none;
   }
 
   .meta-field {
@@ -73,23 +74,6 @@
     font-weight: 400;
     letter-spacing: 0.08em;
     color: var(--muted);
-    border: none;
-    background: transparent;
-    text-align: right;
-    width: 120px;
-    outline: none;
-    cursor: text;
-    transition: color 0.2s;
-    caret-color: var(--red);
-  }
-
-  .meta-value:focus {
-    color: var(--ink);
-    border-bottom: 0.5px solid var(--light-muted);
-  }
-
-  .meta-value::placeholder {
-    color: var(--light-muted);
   }
 
   .meta-divider {
@@ -182,11 +166,9 @@
     font-weight: 500;
     line-height: 1.85;
     color: var(--red);
-    /* Justify like the reference — full justification with large spacing */
     text-align: justify;
     text-justify: inter-word;
     hyphens: auto;
-    /* The reference uses wide word spacing */
     word-spacing: 0.22em;
     letter-spacing: 0.005em;
     outline: none;
@@ -246,6 +228,43 @@
     opacity: 1;
   }
 
+  /* ── DOWNLOAD BUTTON ──────────────────────────────── */
+  .download-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 32px;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 0.5px solid var(--light-muted);
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Inconsolata', monospace;
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    text-decoration: none;
+  }
+
+  .download-btn:hover {
+    color: var(--ink);
+    border-color: var(--muted);
+    background: rgba(160,148,140,0.06);
+  }
+
+  .download-btn svg {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    stroke: currentColor;
+  }
+
   /* ── RESPONSIVE ───────────────────────────────────── */
   @media (max-width: 600px) {
     .page {
@@ -260,6 +279,10 @@
     }
     .body-text {
       font-size: 13.5px;
+    }
+    .download-btn {
+      bottom: 18px;
+      right: 18px;
     }
   }
 
@@ -283,6 +306,45 @@
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     background-size: 128px 128px;
   }
+
+  /* ── PRINT / PDF STYLES ───────────────────────────── */
+  @media print {
+    /* Hide all UI chrome */
+    .metadata,
+    .download-btn,
+    .edit-hint,
+    body::after {
+      display: none !important;
+    }
+
+    html, body {
+      background: #f0ece4 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      max-width: 100%;
+      padding: 48px 56px 80px;
+      margin: 0;
+    }
+
+    /* Prevent awkward page breaks inside paragraphs */
+    p, .body-text {
+      orphans: 3;
+      widows: 3;
+    }
+
+    .image-block {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .end-mark {
+      break-before: avoid;
+      page-break-before: avoid;
+    }
+  }
 </style>
 </head>
 <body>
@@ -291,19 +353,28 @@
 <aside class="metadata" aria-label="Archive metadata">
   <div class="meta-field">
     <span class="meta-label">next mail</span>
-    <input class="meta-value" type="text" value="May 22" placeholder="—" spellcheck="false">
+    <span class="meta-value">May 22</span>
   </div>
   <div class="meta-divider"></div>
   <div class="meta-field">
     <span class="meta-label">date</span>
-    <input class="meta-value" type="text" value="May 10" placeholder="—" spellcheck="false">
+    <span class="meta-value">May 10</span>
   </div>
   <div class="meta-divider"></div>
   <div class="meta-field">
     <span class="meta-label">Postcard no.</span>
-    <input class="meta-value" type="text" value="02" placeholder="—" spellcheck="false">
+    <span class="meta-value">02</span>
   </div>
 </aside>
+
+<!-- ── DOWNLOAD BUTTON ───────────────────────────────── -->
+<button class="download-btn" id="downloadBtn" title="Save as PDF">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v13M7 11l5 5 5-5"/>
+    <path d="M5 20h14"/>
+  </svg>
+  save as pdf
+</button>
 
 <!-- ── MAIN PAGE ──────────────────────────────────────── -->
 <main class="page">
@@ -342,33 +413,33 @@
       contenteditable="true"
       spellcheck="false"
       aria-label="Body text — click to edit"
-    >First of all, let me just thank you for today. I’m not trying to be cliché or grandiose, but spending time with you feels like such a milestone every single time it happens, because that’s how much I value your presence and every little thing you have to say.
+    >First of all, let me just thank you for today. I'm not trying to be cliché or grandiose, but spending time with you feels like such a milestone every single time it happens, because that's how much I value your presence and every little thing you have to say.
 
 Not to mention, you look absolutely divine every single time, and today was no different. I genuinely wished I had just squished your face, but oh well, noted for the next date.
 
-It’s been some time since we started dating, and I’ve never been happier. I’ve grown to like you so much that I genuinely don’t know what to do with all this love. I absolutely adore you, Kritika.
+It's been some time since we started dating, and I've never been happier. I've grown to like you so much that I genuinely don't know what to do with all this love. I absolutely adore you, Kritika.
 
-All your nonsense talks, your random whacks, your sass, I love all of it. I had already spent a week in Bangalore and I was happy, but the moment I saw you before my very eyes, it felt like the air shifted. Everything around me started smelling better, which could absolutely be your perfume too, because yes, you’re fancy, and I think my default state of happiness found a new ceiling.
+All your nonsense talks, your random whacks, your sass, I love all of it. I had already spent a week in Bangalore and I was happy, but the moment I saw you before my very eyes, it felt like the air shifted. Everything around me started smelling better, which could absolutely be your perfume too, because yes, you're fancy, and I think my default state of happiness found a new ceiling.
 
 You are such a force of positivity in my life. I was literally getting lightheaded when I saw you dressed in black. I was like, what does she expect me to do, talk normally while she looks like that? Like, what even.
 
-We’ve talked so much, and I’ve gotten to know so much about you, the intricacies and nuances of your personality, and I’m intrigued beyond anything. It’s strange, because I’ve never really taken this much interest in people, but you, you’re very unique. Everything about you is interesting. I could genuinely hear you talk for hours and still stay back for the Q&A.
+We've talked so much, and I've gotten to know so much about you, the intricacies and nuances of your personality, and I'm intrigued beyond anything. It's strange, because I've never really taken this much interest in people, but you, you're very unique. Everything about you is interesting. I could genuinely hear you talk for hours and still stay back for the Q&A.
 
-You improve anyone’s life just by allowing them to know you. I literally feel like a dumbass kid in your presence. I lose my mind, my senses, and I’m just in awe of this specimen that God crafted with such ridiculous care. Honestly, I think Aphrodite spent the longest time on you, because I mean, so cute.
+You improve anyone's life just by allowing them to know you. I literally feel like a dumbass kid in your presence. I lose my mind, my senses, and I'm just in awe of this specimen that God crafted with such ridiculous care. Honestly, I think Aphrodite spent the longest time on you, because I mean, so cute.
 
-Also, honestly, I’m genuinely very sad hearing your birthday stories. I know you’re super strong, but I still think we absolutely need a do-over for those two birthdays. It’s insane to me that two of your birthdays went like that. No more. It doesn’t feel right, and we will rectify it.
+Also, honestly, I'm genuinely very sad hearing your birthday stories. I know you're super strong, but I still think we absolutely need a do-over for those two birthdays. It's insane to me that two of your birthdays went like that. No more. It doesn't feel right, and we will rectify it.
 
-Let’s plan something to celebrate you two times over, and keep doing it year after year after year, because you are absolutely worth receiving all the unconditional love you can get, all the time.
+Let's plan something to celebrate you two times over, and keep doing it year after year after year, because you are absolutely worth receiving all the unconditional love you can get, all the time.
 
-You are by far the most adorable, understanding, caring, and morally righteous person I’ve ever met. You’re also the most inspiring, and I wish to be inspired by you all the time.
+You are by far the most adorable, understanding, caring, and morally righteous person I've ever met. You're also the most inspiring, and I wish to be inspired by you all the time.
 
-I don’t know what’s in store. Maybe you’ll come back to Bangalore, maybe you’ll take Hyderabad, maybe ICICI will pull something and send you somewhere else, but I really hope it works out. I really hope you get Bangalore, and I hope you get the role you want, whatever it may be.
+I don't know what's in store. Maybe you'll come back to Bangalore, maybe you'll take Hyderabad, maybe ICICI will pull something and send you somewhere else, but I really hope it works out. I really hope you get Bangalore, and I hope you get the role you want, whatever it may be.
 
-I just hope I get to spend more time with you, Kritika. Three hours are not enough. What do you mean I’m dating this ethereal human being and I’m supposed to just pack up and leave in my Uber after 3 hours? Three hours becomes a fleeting memory the second I catch a glimpse of your face.
+I just hope I get to spend more time with you, Kritika. Three hours are not enough. What do you mean I'm dating this ethereal human being and I'm supposed to just pack up and leave in my Uber after 3 hours? Three hours becomes a fleeting memory the second I catch a glimpse of your face.
 
-I’ve never found myself pestering God this much about keeping someone in my life.
+I've never found myself pestering God this much about keeping someone in my life.
 
-You’re perfect, Kritika, and you always will be. But I also hope that I get to shine with you.
+You're perfect, Kritika, and you always will be. But I also hope that I get to shine with you.
 
 I love you, Kritika.
 
@@ -430,6 +501,19 @@ Always, forever.</p>
       img.style.display = 'block';
       document.getElementById('imgPlaceholder').style.display = 'none';
     }
+  });
+
+  // ── PDF DOWNLOAD ──────────────────────────────────────
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    // Get the current title for the document title (affects PDF filename in most browsers)
+    const titleEl = document.querySelector('.title-heading');
+    const originalTitle = document.title;
+    document.title = titleEl.textContent.trim() || "Kay's Postcard";
+
+    window.print();
+
+    // Restore title after print dialog closes
+    setTimeout(() => { document.title = originalTitle; }, 1000);
   });
 </script>
 </body>
